@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+
+set -e
+
+# Check if command argument is provided
+if [ $# -eq 0 ]; then
+    echo "Usage: $0 <command_name>"
+    echo "Available commands:"
+    echo "  simple"
+    echo "  (add more commands as needed)"
+    exit 1
+fi
+
+CMD_NAME="$1"
+REMOTE_USER="{USER_HERE}"
+REMOTE_PASS="{HOST_PASSWORD_HERE}"
+REMOTE_IP="{HOST_IP_HERE}"
+BINARY_NAME="rui3-$CMD_NAME"
+ENTRY_PATH="./cmd/$CMD_NAME/main.go"
+
+# Validate that the command directory exists
+if [ ! -d "./cmd/$CMD_NAME" ]; then
+    echo "Error: Command directory './cmd/$CMD_NAME' does not exist"
+    echo "Available commands:"
+    ls -1 ./cmd/ 2>/dev/null | grep -v "^$" || echo "  (no commands found)"
+    exit 1
+fi
+
+# Validate that main.go exists in the command directory
+if [ ! -f "$ENTRY_PATH" ]; then
+    echo "Error: Main file '$ENTRY_PATH' does not exist"
+    exit 1
+fi
+
+REMOTE_HOST="$REMOTE_USER@$REMOTE_IP"
+REMOTE_DIR="/home/$REMOTE_USER"
+
+echo "=== RUI3 Library Deployment ==="
+echo "Command: $CMD_NAME"
+echo "Target: $REMOTE_HOST"
+echo "Binary: $BINARY_NAME"
+echo
+
+# Build the binary
+echo "1. Building binary for ARM64..."
+GOOS=linux GOARCH=arm64 go build -o "$BINARY_NAME" "$ENTRY_PATH"
+echo "   ✓ Build complete"
+
+# Copy binary
+echo
+echo "2. Copying binary to remote host..."
+sshpass -p "$REMOTE_PASS" scp "$BINARY_NAME" "$REMOTE_HOST:$REMOTE_DIR/"
+echo "   ✓ Binary copied"
+
+# Make executable
+echo
+echo "3. Making binary executable..."
+sshpass -p "$REMOTE_PASS" ssh "$REMOTE_HOST" "chmod +x $REMOTE_DIR/$BINARY_NAME"
+echo "   ✓ Binary is executable"
+
+echo
+echo "4. Deployment complete!"
+echo
+echo "To run on remote host:"
+echo "  ssh $REMOTE_HOST"
+echo "  sudo ./$BINARY_NAME"
+echo
+echo "Note: sudo is required for serial port access"
+
+# Cleanup
+rm "$BINARY_NAME"
