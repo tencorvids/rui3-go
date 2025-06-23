@@ -303,3 +303,186 @@ func (r *RUI3) SetChannelMask(mask ChannelMask) error {
 
 	return fmt.Errorf("failed to set channel mask: %s", response)
 }
+
+func (r *RUI3) GetChannelMask() (ChannelMask, error) {
+	err := r.SendRawCommand("AT+MASK=?")
+	if err != nil {
+		return SubBandAll, fmt.Errorf("failed to send cmask command: %w", err)
+	}
+
+	response, err := r.RecvResponse(5 * time.Second)
+	if err != nil {
+		return SubBandAll, fmt.Errorf("failed to receive cmask response: %w", err)
+	}
+
+	lines := strings.SplitSeq(response, "\n")
+	for line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "AT+MASK=") {
+			parts := strings.SplitN(line, "=", 2)
+			if len(parts) == 2 {
+				maskValue := strings.TrimSpace(parts[1])
+				if colonIndex := strings.Index(maskValue, ":"); colonIndex != -1 {
+					maskValue = maskValue[:colonIndex]
+				}
+
+				switch maskValue {
+				case "0000":
+					return SubBandAll, nil
+				case "0001":
+					return SubBand1, nil
+				case "0002":
+					return SubBand2, nil
+				case "0004":
+					return SubBand3, nil
+				case "0008":
+					return SubBand4, nil
+				case "0010":
+					return SubBand5, nil
+				case "0020":
+					return SubBand6, nil
+				case "0040":
+					return SubBand7, nil
+				case "0080":
+					return SubBand8, nil
+				case "0100":
+					return SubBand9, nil
+				case "0200":
+					return SubBand10, nil
+				case "0400":
+					return SubBand11, nil
+				case "0800":
+					return SubBand12, nil
+				}
+			}
+		}
+	}
+
+	return SubBandAll, fmt.Errorf("MASK not found in response: %s", response)
+}
+
+type RegionBand int
+
+const (
+	EU433   RegionBand = 0
+	CN470   RegionBand = 1
+	RU864   RegionBand = 2
+	IN865   RegionBand = 3
+	EU868   RegionBand = 4
+	US915   RegionBand = 5
+	AU915   RegionBand = 6
+	KR920   RegionBand = 7
+	AS923   RegionBand = 8
+	AS923_2 RegionBand = 9
+	AS923_3 RegionBand = 10
+	AS923_4 RegionBand = 11
+	LA915   RegionBand = 12
+)
+
+func (r *RUI3) SetRegionBand(band RegionBand) error {
+	if band < EU433 || band > LA915 {
+		return fmt.Errorf("invalid region band: %d", band)
+	}
+
+	var bandCmd string
+	switch band {
+	case EU433:
+		bandCmd = "0"
+	case CN470:
+		bandCmd = "1"
+	case RU864:
+		bandCmd = "2"
+	case IN865:
+		bandCmd = "3"
+	case EU868:
+		bandCmd = "4"
+	case US915:
+		bandCmd = "5"
+	case AU915:
+		bandCmd = "6"
+	case KR920:
+		bandCmd = "7"
+	case AS923:
+		bandCmd = "8"
+	case AS923_2:
+		bandCmd = "9"
+	case AS923_3:
+		bandCmd = "10"
+	case AS923_4:
+		bandCmd = "11"
+	case LA915:
+		bandCmd = "12"
+	}
+
+	err := r.SendRawCommand(fmt.Sprintf("AT+BAND=%s", bandCmd))
+	if err != nil {
+		return fmt.Errorf("failed to send band command: %w", err)
+	}
+
+	response, err := r.RecvResponse(5 * time.Second)
+	if err != nil {
+		return fmt.Errorf("failed to receive band response: %w", err)
+	}
+
+	if strings.Contains(response, "OK") {
+		return nil
+	}
+
+	return fmt.Errorf("failed to set region band: %s", response)
+}
+
+func (r *RUI3) GetRegionBand() (RegionBand, error) {
+	err := r.SendRawCommand("AT+BAND=?")
+	if err != nil {
+		return EU433, fmt.Errorf("failed to send band command: %w", err)
+	}
+
+	response, err := r.RecvResponse(5 * time.Second)
+	if err != nil {
+		return EU433, fmt.Errorf("failed to receive band response: %w", err)
+	}
+
+	lines := strings.SplitSeq(response, "\n")
+	for line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "AT+BAND=") {
+			parts := strings.SplitN(line, "=", 2)
+			if len(parts) == 2 {
+				bandValue := strings.TrimSpace(parts[1])
+				if colonIndex := strings.Index(bandValue, ":"); colonIndex != -1 {
+					bandValue = bandValue[:colonIndex]
+				}
+
+				switch bandValue {
+				case "0":
+					return EU433, nil
+				case "1":
+					return CN470, nil
+				case "2":
+					return RU864, nil
+				case "3":
+					return IN865, nil
+				case "4":
+					return EU868, nil
+				case "5":
+					return US915, nil
+				case "6":
+					return AU915, nil
+				case "7":
+					return KR920, nil
+				case "8":
+					return AS923, nil
+				case "9":
+					return AS923_2, nil
+				case "10":
+					return AS923_3, nil
+				case "11":
+					return AS923_4, nil
+				case "12":
+					return LA915, nil
+				}
+			}
+		}
+	}
+	return EU433, fmt.Errorf("BAND not found in response: %s", response)
+}

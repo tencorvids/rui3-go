@@ -6,6 +6,51 @@ import (
 	"time"
 )
 
+func (r *RUI3) ResetMCU() error {
+	err := r.SendRawCommand("ATZ")
+	if err != nil {
+		return fmt.Errorf("failed to send ATZ command: %w", err)
+	}
+
+	time.Sleep(5 * time.Second)
+
+	return nil
+}
+
+func (r *RUI3) ResetFactoryDefaults() error {
+	err := r.SendRawCommand("ATR")
+	if err != nil {
+		return fmt.Errorf("failed to send ATR command: %w", err)
+	}
+
+	time.Sleep(5 * time.Second)
+
+	response, err := r.RecvResponse(5 * time.Second)
+	if err != nil {
+		return fmt.Errorf("failed to receive ATR response: %w", err)
+	}
+
+	if strings.Contains(response, "OK") {
+		return nil
+	}
+
+	return fmt.Errorf("failed to receive ATR response")
+}
+
+func (r *RUI3) Reset() error {
+	err := r.ResetMCU()
+	if err != nil {
+		return fmt.Errorf("failed to reset MCU: %w", err)
+	}
+
+	err = r.ResetFactoryDefaults()
+	if err != nil {
+		return fmt.Errorf("failed to reset factory defaults: %w", err)
+	}
+
+	return nil
+}
+
 func (r *RUI3) Attention() (bool, error) {
 	err := r.SendRawCommand("AT")
 	if err != nil {
@@ -22,33 +67,6 @@ func (r *RUI3) Attention() (bool, error) {
 	}
 
 	return false, nil
-}
-
-func (r *RUI3) MCUReset() error {
-	err := r.SendRawCommand("ATZ")
-	if err != nil {
-		return fmt.Errorf("failed to send ATZ command: %w", err)
-	}
-
-	return nil
-}
-
-func (r *RUI3) RestoreDefaultParameters() error {
-	err := r.SendRawCommand("ATR")
-	if err != nil {
-		return fmt.Errorf("failed to send ATR command: %w", err)
-	}
-
-	response, err := r.RecvResponse(5 * time.Second)
-	if err != nil {
-		return fmt.Errorf("failed to receive ATR response: %w", err)
-	}
-
-	if strings.Contains(response, "OK") {
-		return nil
-	}
-
-	return fmt.Errorf("failed to receive ATR response")
 }
 
 func (r *RUI3) GetSerialNumber() (string, error) {

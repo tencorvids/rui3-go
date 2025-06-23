@@ -17,6 +17,14 @@ func main() {
 	}
 	defer rui.Close()
 
+	slog.Info("Resetting chip, this will take a up to 15 seconds...")
+	err = rui.Reset()
+	if err != nil {
+		slog.Error("Failed to reset", "error", err)
+		os.Exit(1)
+	}
+	slog.Info("Chip reset, resuming...")
+
 	attention, err := rui.Attention()
 	if err != nil {
 		slog.Error("Failed to get attention", "error", err)
