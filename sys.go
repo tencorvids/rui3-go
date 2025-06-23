@@ -25,16 +25,7 @@ func (r *RUI3) ResetFactoryDefaults() error {
 
 	time.Sleep(5 * time.Second)
 
-	response, err := r.RecvResponse(5 * time.Second)
-	if err != nil {
-		return fmt.Errorf("failed to receive ATR response: %w", err)
-	}
-
-	if strings.Contains(response, "OK") {
-		return nil
-	}
-
-	return fmt.Errorf("failed to receive ATR response")
+	return nil
 }
 
 func (r *RUI3) Reset() error {
