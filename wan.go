@@ -234,3 +234,72 @@ func (r *RUI3) SetAdaptiveDataRate(enabled bool) error {
 
 	return fmt.Errorf("failed to set adaptive data rate: %s", response)
 }
+
+type ChannelMask int
+
+const (
+	SubBandAll ChannelMask = 0
+	SubBand1   ChannelMask = 1
+	SubBand2   ChannelMask = 2
+	SubBand3   ChannelMask = 3
+	SubBand4   ChannelMask = 4
+	SubBand5   ChannelMask = 5
+	SubBand6   ChannelMask = 6
+	SubBand7   ChannelMask = 7
+	SubBand8   ChannelMask = 8
+	SubBand9   ChannelMask = 9
+	SubBand10  ChannelMask = 10
+	SubBand11  ChannelMask = 11
+	SubBand12  ChannelMask = 12
+)
+
+func (r *RUI3) SetChannelMask(mask ChannelMask) error {
+	// check if mask is valid
+	if mask < SubBandAll || mask > SubBand12 {
+		return fmt.Errorf("invalid channel mask: %d", mask)
+	}
+
+	maskCmd := "0000"
+	switch mask {
+	case SubBand1:
+		maskCmd = "0001"
+	case SubBand2:
+		maskCmd = "0002"
+	case SubBand3:
+		maskCmd = "0004"
+	case SubBand4:
+		maskCmd = "0008"
+	case SubBand5:
+		maskCmd = "0010"
+	case SubBand6:
+		maskCmd = "0020"
+	case SubBand7:
+		maskCmd = "0040"
+	case SubBand8:
+		maskCmd = "0080"
+	case SubBand9:
+		maskCmd = "0100"
+	case SubBand10:
+		maskCmd = "0200"
+	case SubBand11:
+		maskCmd = "0400"
+	case SubBand12:
+		maskCmd = "0800"
+	}
+
+	err := r.SendRawCommand(fmt.Sprintf("AT+MASK=%s", maskCmd))
+	if err != nil {
+		return fmt.Errorf("failed to send cmask command: %w", err)
+	}
+
+	response, err := r.RecvResponse(5 * time.Second)
+	if err != nil {
+		return fmt.Errorf("failed to receive cmask response: %w", err)
+	}
+
+	if strings.Contains(response, "OK") {
+		return nil
+	}
+
+	return fmt.Errorf("failed to set channel mask: %s", response)
+}

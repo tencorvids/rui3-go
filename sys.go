@@ -17,12 +17,8 @@ func (r *RUI3) Attention() (bool, error) {
 		return false, fmt.Errorf("failed to receive AT response: %w", err)
 	}
 
-	lines := strings.SplitSeq(response, "\n")
-	for line := range lines {
-		line = strings.TrimSpace(line)
-		if strings.Contains(line, "OK") {
-			return true, nil
-		}
+	if strings.Contains(response, "OK") {
+		return true, nil
 	}
 
 	return false, nil
@@ -48,12 +44,8 @@ func (r *RUI3) RestoreDefaultParameters() error {
 		return fmt.Errorf("failed to receive ATR response: %w", err)
 	}
 
-	lines := strings.SplitSeq(response, "\n")
-	for line := range lines {
-		line = strings.TrimSpace(line)
-		if strings.Contains(line, "OK") {
-			return nil
-		}
+	if strings.Contains(response, "OK") {
+		return nil
 	}
 
 	return fmt.Errorf("failed to receive ATR response")
