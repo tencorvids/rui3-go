@@ -33,18 +33,14 @@ func (r *RUI3) JoinNetworkWithParams(join bool, autoJoin bool, retryInterval int
 		return fmt.Errorf("invalid join attempts: %d", joinAttempts)
 	}
 
-	var joinCmd string
+	joinCmd := "0"
 	if join {
 		joinCmd = "1"
-	} else {
-		joinCmd = "0"
 	}
 
-	var autoJoinCmd string
+	autoJoinCmd := "0"
 	if autoJoin {
 		autoJoinCmd = "1"
-	} else {
-		autoJoinCmd = "0"
 	}
 
 	cmd := fmt.Sprintf("AT+JOIN=%s:%s:%d:%d", joinCmd, autoJoinCmd, retryInterval, joinAttempts)
@@ -214,4 +210,27 @@ func (r *RUI3) GetClass() (Class, error) {
 	}
 
 	return ClassA, fmt.Errorf("CLASS not found in response: %s", response)
+}
+
+func (r *RUI3) SetAdaptiveDataRate(enabled bool) error {
+	enabledCmd := "0"
+	if enabled {
+		enabledCmd = "1"
+	}
+
+	err := r.SendRawCommand(fmt.Sprintf("AT+ADR=%s", enabledCmd))
+	if err != nil {
+		return fmt.Errorf("failed to send adr command: %w", err)
+	}
+
+	response, err := r.RecvResponse(5 * time.Second)
+	if err != nil {
+		return fmt.Errorf("failed to receive adr response: %w", err)
+	}
+
+	if strings.Contains(response, "OK") {
+		return nil
+	}
+
+	return fmt.Errorf("failed to set adaptive data rate: %s", response)
 }
