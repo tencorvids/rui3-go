@@ -39,6 +39,14 @@ func New(portName string) (*RUI3, error) {
 	}, nil
 }
 
+func NewWithPort(port serial.Port) *RUI3 {
+	return &RUI3{
+		port:   port,
+		reader: bufio.NewReader(port),
+		writer: bufio.NewWriter(port),
+	}
+}
+
 func (r *RUI3) Close() error {
 	return r.port.Close()
 }

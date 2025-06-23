@@ -1,4 +1,4 @@
-module rui3-go
+module tencorvids/rui3-go
 
 go 1.24.2
 
