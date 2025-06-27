@@ -159,3 +159,28 @@ func (r *RUI3) GetHardwareModel() (string, error) {
 
 	return "", fmt.Errorf("failed to receive AT+HWMODEL response")
 }
+
+func (r *RUI3) GetBootloaderVersion() (string, error) {
+	err := r.SendRawCommand("AT+BOOTVER=?")
+	if err != nil {
+		return "", fmt.Errorf("failed to send AT+BLVER? command: %w", err)
+	}
+
+	response, err := r.RecvResponse(5 * time.Second)
+	if err != nil {
+		return "", fmt.Errorf("failed to receive AT+BLVER response: %w", err)
+	}
+
+	lines := strings.SplitSeq(response, "\n")
+	for line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.Contains(line, "AT+BOOTVER=") {
+			parts := strings.SplitN(line, "=", 2)
+			if len(parts) == 2 {
+				return strings.TrimSpace(parts[1]), nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("failed to receive AT+BLVER response")
+}
