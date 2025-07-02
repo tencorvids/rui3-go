@@ -1,6 +1,7 @@
 package rui3
 
 import (
+	"encoding/hex"
 	"fmt"
 	"strings"
 	"time"
@@ -327,6 +328,8 @@ func (r *RUI3) GetChannelMask() (ChannelMask, error) {
 				}
 
 				switch maskValue {
+				case "00FF":
+					return SubBandAll, nil
 				case "0000":
 					return SubBandAll, nil
 				case "0001":
@@ -353,6 +356,8 @@ func (r *RUI3) GetChannelMask() (ChannelMask, error) {
 					return SubBand11, nil
 				case "0800":
 					return SubBand12, nil
+				default:
+					return SubBandAll, nil
 				}
 			}
 		}
@@ -485,4 +490,23 @@ func (r *RUI3) GetRegionBand() (RegionBand, error) {
 		}
 	}
 	return EU433, fmt.Errorf("BAND not found in response: %s", response)
+}
+
+func (r *RUI3) Send(payload string) error {
+	payload = hex.EncodeToString([]byte(payload))
+	err := r.SendRawCommand(fmt.Sprintf("AT+SEND=1:%s", payload))
+	if err != nil {
+		return fmt.Errorf("failed to send payload: %w", err)
+	}
+
+	response, err := r.RecvResponse(30 * time.Second)
+	if err != nil {
+		return fmt.Errorf("failed to receive send response: %w", err)
+	}
+
+	if strings.Contains(response, "OK") {
+		return nil
+	}
+
+	return fmt.Errorf("failed to send payload: %s", response)
 }
