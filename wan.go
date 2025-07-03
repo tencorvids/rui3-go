@@ -3,6 +3,7 @@ package rui3
 import (
 	"encoding/hex"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 )
@@ -494,7 +495,10 @@ func (r *RUI3) GetRegionBand() (RegionBand, error) {
 
 func (r *RUI3) Send(payload string) error {
 	payload = hex.EncodeToString([]byte(payload))
-	err := r.SendRawCommand(fmt.Sprintf("AT+SEND=1:%s", payload))
+	payload = fmt.Sprintf("AT+SEND=1:%s", payload)
+	slog.Info("Sending payload", "payload", payload)
+
+	err := r.SendRawCommand(payload)
 	if err != nil {
 		return fmt.Errorf("failed to send payload: %w", err)
 	}
