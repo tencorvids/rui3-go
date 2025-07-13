@@ -22,6 +22,7 @@ func main() {
 		os.Exit(1)
 	}
 	slog.Info("Attention", "attention", attention)
+}
 ```
 
 More examples found in `/cmd`.
