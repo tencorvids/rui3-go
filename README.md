@@ -4,6 +4,12 @@ Go implementation of the [RUI3 library](https://docs.rakwireless.com/product-cat
 
 Tested against the [RAK3172](https://store.rakwireless.com/products/wisduo-lpwan-module-rak3172?utm_source=rak3172landingpage&utm_medium=header&utm_campaign=RAKwireless&variant=44068554473670) module via an ESP32 but should support all RUI3 modules.
 
+## Installation
+
+```bash
+go get tencorvids/rui3-go
+```
+
 ## Usage
 
 ```go
